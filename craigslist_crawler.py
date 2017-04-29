@@ -3,12 +3,12 @@ Craigslist web crawler to complile data for residentail rental market.
 Will need:
 - Web crawler to pull links for each listing from main page (and next page)
 - redundancy checker
-- JSON exportation
 - data to pull:
 	- date of listing
 	- rent $ per month
 	- address / location
 	- property size (sf) if available
+	- bed / bath count
 
 POSSIBLE ISSUES:
 - Need to figure out how to handle dates in the json/bson file. 
@@ -16,25 +16,57 @@ POSSIBLE ISSUES:
 if map is selected (has not been an issue so far though). 
 '''
 
-from bs4 import BeautifulSoup
-import urllib
-import json
-
-starting_link = 'https://sandiego.craigslist.org/search/apa'
-
-# This is for a new file.  Will need to change this when adding to the file. 
-json_file = open('craigslist_rental_data.json', 'w+')
-
-'''Links are shown in a list of items.  With the item numbers the links can be recreated in the url.
+'''Craigslists shows links for each listing inside of list of items (li) in the html. 
+Each has an item number.  
+With the item numbers the links can be recreated in the url.
 example https://sandiego.craigslist.org/csd/apa/6108616530.html  6108616530 is the item number. 
 
 Repost is shown in the list item as data-repost-of='old_item#'
 '''
 
+from bs4 import BeautifulSoup
+import urllib
+import json
+import os
+
+starting_link = 'https://sandiego.craigslist.org/search/apa'
+
+json_file_name = r'craigslist_rental_data.json'
+
+'''
+# Pull list of craigslist id #'s.  
+with open(json_file_name, 'r') as read_file:
+	data = json.load(read_file)
+	print data
+'''
+
+
+json_file = open(json_file_name, 'a+')
+
+def remove_bracket_close():
+	'''Removes the closing bracket from an existing json file, 
+	in order to append new records.'''
+	with open(json_file_name, 'rb+') as edit_file:
+		edit_file.seek(-1, os.SEEK_END)
+		edit_file.truncate()
+		edit_file.write(',' + os.linesep)
+
+
+def craiglist_id_list():
+	with open(json_file_name, 'r') as read_file:
+		data = json.load(read_file)
+		print data
+
 pages_scraped = 0
 
-def pull_page_data(starting_link, pages_to_pull, pages_scraped):
-	''' Find all of the rental items on the page. '''
+def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
+	''' Find all of the rental items on the craigslist. Scare data and dump to json file.'''
+	
+	if new_file and pages_scraped == 0:
+		json_file.write('[')
+	elif new_file == False and pages_scraped == 0:
+		remove_bracket_close()
+
 	html_doc = urllib.urlopen(starting_link)
 
 	soup = BeautifulSoup(html_doc, 'html.parser')
@@ -85,8 +117,13 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped):
 
 			# Write the dictionary to file, then a new line. 
 			json.dump(json_row, json_file)
-			json_file.write('\n')
+			json_file.write(',' + os.linesep)
+			#json_file.write(os.linesep)
+			
+			#json_file.write('\n')
+			
 
+			#save_to_file(json_row)
 	# Find the next page link.
 	pages_scraped += 1
 
@@ -94,12 +131,21 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped):
 
 	html_doc.close()
 
+	
 	if pages_scraped < pages_to_pull:
 		pull_page_data(next_link, pages_to_pull, pages_scraped)
+	else:
+		json_file.close()
+		# Remove the last comma from the file and add the closing bracket. 
+		with open(json_file_name, 'rb+') as json_file_edit:
+			json_file_edit.seek(-2, os.SEEK_END)
+			json_file_edit.truncate()
+			json_file_edit.write(']')
+			json_file_edit.close()	
 
 
-pull_page_data(starting_link, 3, pages_scraped)
-	
-json_file.close()
+pull_page_data(starting_link, 4, pages_scraped, new_file=False)
+#craiglist_id_list()	
+
 
 
