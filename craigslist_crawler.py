@@ -1,14 +1,17 @@
 '''
 Craigslist web crawler to complile data for residentail rental market.
 Will need:
-- Web crawler to pull links for each listing from main page (and next page)
-- redundancy checker
+- Web crawler to pull links for each listing from main page (and next page). done. 
+- redundancy checker. done. 
 - data to pull:
 	- date of listing
 	- rent $ per month
 	- address / location
 	- property size (sf) if available
 	- bed / bath count
+
+- Need to go into each link to find more details
+- Find from the page or lookup lat/long coordinates for each address. 
 
 POSSIBLE ISSUES:
 - Need to figure out how to handle dates in the json/bson file. 
@@ -33,14 +36,6 @@ starting_link = 'https://sandiego.craigslist.org/search/apa'
 
 json_file_name = r'craigslist_rental_data.json'
 
-'''
-# Pull list of craigslist id #'s.  
-with open(json_file_name, 'r') as read_file:
-	data = json.load(read_file)
-	print data
-'''
-
-
 json_file = open(json_file_name, 'a+')
 
 def remove_bracket_close():
@@ -51,17 +46,25 @@ def remove_bracket_close():
 		edit_file.truncate()
 		edit_file.write(',' + os.linesep)
 
-
 def craiglist_id_list():
+	'''Compiles and returns the craigslist listing ids that are in the json file.'''
+	id_list = []
 	with open(json_file_name, 'r') as read_file:
 		data = json.load(read_file)
-		print data
+		for i in data:
+			id_list.append(i['craigslist_id'])
+	return id_list
+
+try:
+	craiglist_ids = craiglist_id_list()
+except:
+	craiglist_ids = []
 
 pages_scraped = 0
 
 def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 	''' Find all of the rental items on the craigslist. Scare data and dump to json file.'''
-	
+
 	if new_file and pages_scraped == 0:
 		json_file.write('[')
 	elif new_file == False and pages_scraped == 0:
@@ -74,9 +77,10 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 	for item in soup.find_all('li', class_="result-row"):
 		json_row = {}
 		
-		# Exclude the reposts. 
-		if item.get('data-repost-of') == None:
-				
+		# Exclude the reposts and items already in json file. 
+		if item.get('data-repost-of') == None and \
+		item.get('data-pid') not in craiglist_ids:
+
 			json_row['listing_date'] = item.find('time').get('datetime')
 			json_row['craigslist_id'] = item.get('data-pid')
 
@@ -118,12 +122,7 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 			# Write the dictionary to file, then a new line. 
 			json.dump(json_row, json_file)
 			json_file.write(',' + os.linesep)
-			#json_file.write(os.linesep)
-			
-			#json_file.write('\n')
-			
-
-			#save_to_file(json_row)
+	
 	# Find the next page link.
 	pages_scraped += 1
 
@@ -141,11 +140,10 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 			json_file_edit.seek(-2, os.SEEK_END)
 			json_file_edit.truncate()
 			json_file_edit.write(']')
-			json_file_edit.close()	
 
 
 pull_page_data(starting_link, 4, pages_scraped, new_file=False)
-#craiglist_id_list()	
+
 
 
 
