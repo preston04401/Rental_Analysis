@@ -31,6 +31,7 @@ from bs4 import BeautifulSoup
 import urllib
 import json
 import os
+import detail_page_scraper
 
 starting_link = 'https://sandiego.craigslist.org/search/apa'
 
@@ -65,6 +66,7 @@ pages_scraped = 0
 def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 	''' Find all of the rental items on the craigslist. Scare data and dump to json file.'''
 
+	# check if appending a json file or creating new. 
 	if new_file and pages_scraped == 0:
 		json_file.write('[')
 	elif new_file == False and pages_scraped == 0:
@@ -82,7 +84,9 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 		item.get('data-pid') not in craiglist_ids:
 
 			json_row['listing_date'] = item.find('time').get('datetime')
-			json_row['craigslist_id'] = item.get('data-pid')
+			
+			craigslist_id = item.get('data-pid')
+			json_row['craigslist_id'] = craigslist_id
 
 			meta_data = item.find('span', class_='result-meta')
 
@@ -111,13 +115,33 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 				except:
 					pass
 			
-			address = item.find('span', class_='result-hood')
+			address_1 = item.find('span', class_='result-hood')
 
 			# In some cases there is more location information on the item's spacific page. 
-			if address != None:
-				open_bracket_indx = address.text.index('(')
-				close_bracket_indx = address.text.index(')')
-				json_row['General_Address'] = address.text[open_bracket_indx + 1: close_bracket_indx]
+			if address_1 != None:
+				open_bracket_indx = address_1.text.index('(')
+				close_bracket_indx = address_1.text.index(')')
+				json_row['General_Address'] = \
+				address_1.text[open_bracket_indx + 1: close_bracket_indx]
+
+			# Find the link to details.
+			end_link = item.find('a').get('href')
+			craigslist_index = starting_link.index('.org')
+			standard_lnk = starting_link[:craigslist_index + 4]
+			full_link = standard_lnk + end_link
+
+			json_row['link'] = full_link
+
+			# Pull the details from the linked detail property page. 
+			# @return = [latitude, longitue, title, address, attributes, text]
+			details = detail_page_scraper.scrape_details(craigslist_id, full_link)
+
+			json_row['latitude'] = details[0]
+			json_row['longitue'] = details[1]
+			json_row['title'] = details[2]
+			json_row['address_2'] = details[3]
+			json_row['attributes'] = details[4]
+			json_row['text'] = details[5]
 
 			# Write the dictionary to file, then a new line. 
 			json.dump(json_row, json_file)
@@ -126,7 +150,8 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 	# Find the next page link.
 	pages_scraped += 1
 
-	next_link = 'https://sandiego.craigslist.org' + soup.find('a', class_="button next").get('href')
+	next_link = 'https://sandiego.craigslist.org' + \
+	soup.find('a', class_="button next").get('href')
 
 	html_doc.close()
 
@@ -142,7 +167,7 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 			json_file_edit.write(']')
 
 
-pull_page_data(starting_link, 4, pages_scraped, new_file=False)
+pull_page_data(starting_link, 1, pages_scraped, new_file=True)
 
 
 
