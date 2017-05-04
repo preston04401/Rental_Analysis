@@ -1,17 +1,16 @@
 '''
 Craigslist web crawler to complile data for residentail rental market.
 Will need:
+- redundancy checker: create a csv file for faster data handling?
 - Web crawler to pull links for each listing from main page (and next page). done. 
-- redundancy checker. done. 
-- data to pull:
+- data to pulled:
 	- date of listing
 	- rent $ per month
 	- address / location
 	- property size (sf) if available
 	- bed / bath count
+	- coordinates
 
-- Need to go into each link to find more details
-- Find from the page or lookup lat/long coordinates for each address. 
 
 POSSIBLE ISSUES:
 - Need to figure out how to handle dates in the json/bson file. 
@@ -19,11 +18,7 @@ POSSIBLE ISSUES:
 if map is selected (has not been an issue so far though). 
 '''
 
-'''Craigslists shows links for each listing inside of list of items (li) in the html. 
-Each has an item number.  
-With the item numbers the links can be recreated in the url.
-example https://sandiego.craigslist.org/csd/apa/6108616530.html  6108616530 is the item number. 
-
+'''
 Repost is shown in the list item as data-repost-of='old_item#'
 '''
 
@@ -36,8 +31,6 @@ import detail_page_scraper
 starting_link = 'https://sandiego.craigslist.org/search/apa'
 
 json_file_name = r'craigslist_rental_data.json'
-
-json_file = open(json_file_name, 'a+')
 
 def remove_bracket_close():
 	'''Removes the closing bracket from an existing json file, 
@@ -66,6 +59,20 @@ pages_scraped = 0
 def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 	''' Find all of the rental items on the craigslist. Scare data and dump to json file.'''
 
+	# Check to ensure that user actually wants to overwrite data if that is what is happening. 
+	cwd = os.getcwd()
+	current_files = os.listdir(cwd)
+
+	if new_file and json_file_name in current_files:
+		overwrite_confirm = raw_input('Are you sure you want to overwrite ' + \
+			json_file_name + '(y/n)?')
+
+		if overwrite_confirm.find('y') == -1 and overwrite_confirm.find('Y') == -1:
+			print 'Operation terminated by user'
+			quit()
+
+	json_file = open(json_file_name, 'a+')
+	
 	# check if appending a json file or creating new. 
 	if new_file and pages_scraped == 0:
 		json_file.write('[')
@@ -165,6 +172,8 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 			json_file_edit.seek(-2, os.SEEK_END)
 			json_file_edit.truncate()
 			json_file_edit.write(']')
+
+	print 'script complete'
 
 
 pull_page_data(starting_link, 1, pages_scraped, new_file=True)

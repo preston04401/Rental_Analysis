@@ -49,9 +49,10 @@ def save_jpgs(property_id, image_count, img_link):
 def scrape_details(property_id, link):
 	'''
 	Pull information from the detail page, and call the jpg file saving function (above)
-	return [latitude, longitude, ]
+
 	@param property_id = the property id that craigslist uses.
 	@return = [latitude, longitude, address, title, attributes, text] 
+
 	attributes are a list drawn from the attribute spans and 
 	text is the text from the main section
 	'''
@@ -122,7 +123,13 @@ def scrape_details(property_id, link):
 
 	# Pull text from the page. 
 	try:
-		text = soup.find(id='postingbody').get_text()
+		temp_text = soup.find(id='postingbody').get_text()
+		# Remove the line repeated from the standard element. 
+		qrline_index = temp_text.find('QR Code Link to This Post')
+		if qrline_index != -1:
+			text = temp_text[qrline_index + 25:]
+		else:
+			text = temp_text
 	except:
 		text = None
 
