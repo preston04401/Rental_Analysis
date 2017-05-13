@@ -140,7 +140,7 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 			json_row['link'] = full_link
 
 			# Pull the details from the linked detail property page. 
-			# @return = [latitude, longitue, title, address, attributes, text]
+			# @return = [latitude, longitue, title, address, attributes, text, map_accuracy]
 			details = detail_page_scraper.scrape_details(craigslist_id, full_link)
 
 			json_row['latitude'] = details[0]
@@ -149,6 +149,7 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 			json_row['address_2'] = details[3]
 			json_row['attributes'] = details[4]
 			json_row['text'] = details[5]
+			json_row['map_accuracy'] = details[6]
 
 			# Write the dictionary to file, then a new line. 
 			json.dump(json_row, json_file)

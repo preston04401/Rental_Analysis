@@ -51,7 +51,7 @@ def scrape_details(property_id, link):
 	Pull information from the detail page, and call the jpg file saving function (above)
 
 	@param property_id = the property id that craigslist uses.
-	@return = [latitude, longitude, address, title, attributes, text] 
+	@return = [latitude, longitude, address, title, attributes, text, map_accuracy] 
 
 	attributes are a list drawn from the attribute spans and 
 	text is the text from the main section
@@ -67,9 +67,11 @@ def scrape_details(property_id, link):
 	if map_div != None:
 		latitude = map_div.get('data-latitude')
 		longitue = map_div.get('data-longitude')
+		map_accuracy = int(map_div.get('data-accuracy'))
 	else:
 		latitude = None
 		longitue = None
+		map_accuracy = None   # ADD THIS TO JSON. ********************
 
 	# Scape all of the thumb images. 
 	image_links = soup.find_all('a', class_='thumb')
@@ -147,11 +149,11 @@ def scrape_details(property_id, link):
 
 	html_doc.close()
 
-	return [latitude, longitue, title, address, attributes, text]
+	return [latitude, longitue, title, address, attributes, text, map_accuracy]
 
 #print scrape_details('6112538066', test_url)
 
-#pic = urllib.urlretrieve('https://images.craigslist.org/01616_46rnDqsiSKE_600x450.jpg', os.path.basename('https://images.craigslist.org/01616_46rnDqsiSKE_600x450.jpg'))
+
 
 
 
