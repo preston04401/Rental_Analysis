@@ -56,14 +56,14 @@ except:
 
 pages_scraped = 0
 
-def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
+def pull_page_data(starting_link, pages_scraped, new_file=True):
 	''' Find all of the rental items on the craigslist. Scare data and dump to json file.'''
 
 	# Check to ensure that user actually wants to overwrite data if that is what is happening. 
 	cwd = os.getcwd()
 	current_files = os.listdir(cwd)
 
-	if new_file and json_file_name in current_files:
+	if new_file and json_file_name in current_files and pages_scraped == 0:
 		overwrite_confirm = raw_input('Are you sure you want to overwrite ' + \
 			json_file_name + '(y/n)?')
 
@@ -163,21 +163,23 @@ def pull_page_data(starting_link, pages_to_pull, pages_scraped, new_file=True):
 
 	html_doc.close()
 
+	# Text if at the end of the craigslist pages.
+	page_range = int(soup.find('span', class_="rangeTo").get_text())
 	
-	if pages_scraped < pages_to_pull:
-		pull_page_data(next_link, pages_to_pull, pages_scraped)
-	else:
+	if page_range >= 2400:
+		# Close the file if at or beyond the 2400th record. 
 		json_file.close()
 		# Remove the last comma from the file and add the closing bracket. 
 		with open(json_file_name, 'rb+') as json_file_edit:
 			json_file_edit.seek(-2, os.SEEK_END)
 			json_file_edit.truncate()
-			json_file_edit.write(']')
+			json_file_edit.write(']')		
+	else:
+		pull_page_data(next_link, pages_scraped)
 
 	print 'script complete'
 
-
-pull_page_data(starting_link, 1, pages_scraped, new_file=True)
+pull_page_data(starting_link, pages_scraped, new_file=True)
 
 
 
