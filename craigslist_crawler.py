@@ -1,3 +1,4 @@
+#!/usr/bin/python
 '''
 Craigslist web crawler to complile data for residentail rental market.
 Will need:
