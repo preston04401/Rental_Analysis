@@ -26,7 +26,7 @@ Repost is shown in the list item as data-repost-of='old_item#'
 from bs4 import BeautifulSoup
 import urllib
 import json
-import os
+import os, sys, getopt
 import detail_page_scraper
 
 starting_link = 'https://sandiego.craigslist.org/search/apa'
@@ -159,29 +159,25 @@ def pull_page_data(starting_link, pages_scraped, new_file=True):
 	# Find the next page link.
 	pages_scraped += 1
 
-	next_link = 'https://sandiego.craigslist.org' + \
-	soup.find('a', class_="button next").get('href')
+	next_page_button = soup.find('a', class_="button next")
 
-	html_doc.close()
+	if next_page_button:
+		next_link = 'https://sandiego.craigslist.org' + \
+		next_page_button.get('href')
 
-	# Text if at the end of the craigslist pages.
-	page_range = int(soup.find('span', class_="rangeTo").get_text())
-	
-	if page_range >= 2400:
-		# Close the file if at or beyond the 2400th record. 
+		html_doc.close()
+
+		pull_page_data(next_link, pages_scraped)
+	else:
+		# Close the file if there are no more pages. 
 		json_file.close()
+		html_doc.close()
 		# Remove the last comma from the file and add the closing bracket. 
 		with open(json_file_name, 'rb+') as json_file_edit:
 			json_file_edit.seek(-2, os.SEEK_END)
 			json_file_edit.truncate()
-			json_file_edit.write(']')		
-	else:
-		pull_page_data(next_link, pages_scraped)
+			json_file_edit.write(']')
 
 	print 'script complete'
 
 pull_page_data(starting_link, pages_scraped, new_file=True)
-
-
-
-
