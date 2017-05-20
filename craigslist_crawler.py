@@ -25,7 +25,7 @@ Repost is shown in the list item as data-repost-of='old_item#'
 from bs4 import BeautifulSoup
 import urllib
 import json
-import os
+import os, sys, getopt
 import detail_page_scraper
 
 starting_link = 'https://sandiego.craigslist.org/search/apa'
