@@ -59,7 +59,7 @@ pages_scraped = 0
 
 def pull_page_data(starting_link, pages_scraped, new_file=True):
 	''' Find all of the rental items on the craigslist. Scare data and dump to json file.'''
-
+	global json_file
 	# Check to ensure that user actually wants to overwrite data if that is what is happening. 
 	cwd = os.getcwd()
 	current_files = os.listdir(cwd)
@@ -72,7 +72,8 @@ def pull_page_data(starting_link, pages_scraped, new_file=True):
 			print 'Operation terminated by user'
 			quit()
 
-	json_file = open(json_file_name, 'a+')
+	if (pages_scraped == 0):
+		json_file = open(json_file_name, 'a+')
 	
 	# check if appending a json file or creating new. 
 	if new_file and pages_scraped == 0:
@@ -166,12 +167,13 @@ def pull_page_data(starting_link, pages_scraped, new_file=True):
 		next_page_button.get('href')
 
 		html_doc.close()
-
+		print "Page completed"+str(pages_scraped)
 		pull_page_data(next_link, pages_scraped)
 	else:
 		# Close the file if there are no more pages. 
 		json_file.close()
 		html_doc.close()
+		print "Last Page completed"+str(pages_scraped)
 		# Remove the last comma from the file and add the closing bracket. 
 		with open(json_file_name, 'rb+') as json_file_edit:
 			json_file_edit.seek(-2, os.SEEK_END)
