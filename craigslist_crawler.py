@@ -37,21 +37,21 @@ new_file = ""
 
 # getopts to update above variables based on file call statement with cron job. 
 try:
-	opts, args = getopts.getopts(sys.argv[1:], "-s:-j:-n:", ["start_site=", "json_file=", "new_file="])
+	opts, args = getopt.getopt(sys.argv[1:], "-s:-j:-n:", ["start_site=", "json_file=", "new_file="])
 except getopt.GetoptError:
 	"Error with getopt on job call"
 	sys.exit(2)
 
 for opt, arg in opts:
 	if opt in ["-s", "--start_site"]:
-			starting_link = arg
-		elif opt in ["-j", "--json_file"]:
-			json_file_name = arg
-		elif opt in ["-n", "--new_file"]:
-			if "T" in arg or "t" in arg:
-				new_file = True
-			else:
-				new_file = False
+		starting_link = arg
+	elif opt in ["-j", "--json_file"]:
+		json_file_name = arg
+	elif opt in ["-n", "--new_file"]:
+		if "T" in arg or "t" in arg:
+			new_file = True
+		else:
+			new_file = False
 
 def remove_bracket_close():
 	'''Removes the closing bracket from an existing json file, 
