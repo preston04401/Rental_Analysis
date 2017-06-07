@@ -1,17 +1,14 @@
 #!/usr/bin/python
 '''
+File to be called with the following options input with the job call:
+
+-s or --start_site (followed by) 'name of the webpage for the crawler to begin'
+-j or --json_file 'name of the json file to be created or appended'
+-n or --new_file 'true/t if the json file is to be created, false/f otherwise'
+
 Craigslist web crawler to complile data for residentail rental market.
 Will need:
 - redundancy checker: create a csv file for faster data handling?
-- Web crawler to pull links for each listing from main page (and next page). done. 
-- data to pulled:
-	- date of listing
-	- rent $ per month
-	- address / location
-	- property size (sf) if available
-	- bed / bath count
-	- coordinates
-
 
 POSSIBLE ISSUES:
 - Need to figure out how to handle dates in the json/bson file. 
@@ -29,9 +26,32 @@ import json
 import os, sys, getopt
 import detail_page_scraper
 
+# Default starting link to be rewriten below with args from file call statement. 
 starting_link = 'https://sandiego.craigslist.org/search/apa'
 
+# Default json file name to be rewriten below with args from file call statement. 
 json_file_name = r'craigslist_rental_data.json'
+
+# new_file to be rewritten as boolean below.
+new_file = ""
+
+# getopts to update above variables based on file call statement with cron job. 
+try:
+	opts, args = getopts.getopts(sys.argv[1:], "-s:-j:-n:", ["start_site=", "json_file=", "new_file="])
+except getopt.GetoptError:
+	"Error with getopt on job call"
+	sys.exit(2)
+
+for opt, arg in opts:
+	if opt in ["-s", "--start_site"]:
+			starting_link = arg
+		elif opt in ["-j", "--json_file"]:
+			json_file_name = arg
+		elif opt in ["-n", "--new_file"]:
+			if "T" in arg or "t" in arg:
+				new_file = True
+			else:
+				new_file = False
 
 def remove_bracket_close():
 	'''Removes the closing bracket from an existing json file, 
@@ -182,4 +202,4 @@ def pull_page_data(starting_link, pages_scraped, new_file=True):
 
 	print 'script complete'
 
-pull_page_data(starting_link, pages_scraped, new_file=True)
+pull_page_data(starting_link, pages_scraped, new_file)
