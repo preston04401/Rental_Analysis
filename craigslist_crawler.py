@@ -33,7 +33,7 @@ starting_link = 'https://sandiego.craigslist.org/search/apa'
 json_file_name = r'craigslist_rental_data.json'
 
 # new_file to be rewritten as boolean below.
-new_file = ""
+new_file = False
 
 # getopts to update above variables based on file call statement with cron job. 
 try:
